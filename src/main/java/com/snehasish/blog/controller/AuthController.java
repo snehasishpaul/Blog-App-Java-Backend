@@ -1,7 +1,7 @@
 package com.snehasish.blog.controller;
 
-import javax.validation.Valid;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,10 +25,14 @@ import com.snehasish.blog.payload.UserDto;
 import com.snehasish.blog.security.JWTTokenHelper;
 import com.snehasish.blog.service.UserService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/auth/")
 @Validated
 public class AuthController {
+
+	Logger logger = LogManager.getLogger(AuthController.class);
 
 	@Autowired
 	private JWTTokenHelper jwtTokenHelper;

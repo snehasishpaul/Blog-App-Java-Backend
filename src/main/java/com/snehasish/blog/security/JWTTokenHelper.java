@@ -5,19 +5,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import javax.crypto.SecretKey;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JWTTokenHelper {
 
+	// requirement :
 	public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
 
-	private String secret = "jwtTokenKey";
+//	private String key = "jwtTokenKeyForBlogApplicationBySnehasish1234567890In2023";
+	private String key = "jwtTokenKeyForBlogApplicationBySnehasish1234567890In2023fq8w/wSmkN8SvY1VfbvSBqR4+r9cNkdLCZHi7A88f3r";
+	SecretKey secret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(key));
 
 	// retrieve username from jwt token
 	public String getUsernameFromToken(String token) {
@@ -36,7 +43,8 @@ public class JWTTokenHelper {
 
 	// retrieve any information from token we will need the secret key
 	private Claims getAllClaimsFromToken(String token) {
-		return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+//		return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+		return Jwts.parserBuilder().setSigningKey(secret).build().parseClaimsJws(token).getBody();
 	}
 
 	// check if the token has expired or not
@@ -59,8 +67,8 @@ public class JWTTokenHelper {
 	// compaction of the JWT to a URL-safe string
 	private String doGenerateToken(Map<String, Object> claims, String subject) {
 		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 100))
-				.signWith(SignatureAlgorithm.HS512, secret).compact();
+				.setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+				.signWith(secret, SignatureAlgorithm.HS512).compact();
 	}
 
 	// Validate Token

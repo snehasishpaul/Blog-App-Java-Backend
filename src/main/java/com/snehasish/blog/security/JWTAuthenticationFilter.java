@@ -2,11 +2,8 @@ package com.snehasish.blog.security;
 
 import java.io.IOException;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,9 +15,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
+
+	Logger logger = LogManager.getLogger(JWTAuthenticationFilter.class);
 
 	@Autowired
 	private UserDetailsService userDetailsService;
@@ -35,7 +38,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 		// 1. get token
 		String requestToken = request.getHeader("Authorization");
 		// Bearer 23525223sdgsg.... format
-		System.out.println(requestToken);
+		logger.info("Token :  { " + requestToken + " }");
 
 		String username = null;
 
@@ -46,22 +49,27 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 			try {
 				username = this.jwtTokenHelper.getUsernameFromToken(token);
 			} catch (IllegalArgumentException e) {
-				System.out.println("Unable to get JWT token");
+				logger.info("Illegal Argument while fetching the username !!");
+				e.printStackTrace();
 			} catch (ExpiredJwtException e) {
-				System.out.println("Jwt token has expired");
+				logger.info("Given jwt token is expired !!");
+				e.printStackTrace();
 			} catch (MalformedJwtException e) {
-				System.out.println("Invalid jwt exception");
+				logger.info("Some changed has done in token !! Invalid Token");
+				e.printStackTrace();
 			}
 		} else {
-			System.out.println("Jwt token does not begin with 'Bearer'");
+			logger.info("Jwt token does not begin with 'Bearer' OR JWT token null OR Invalid Header value");
 		}
 
 		// once we get the token, now we validate
 
 		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-			if (this.jwtTokenHelper.validateToken(token, userDetails)) {
+			Boolean isValidatedToken = this.jwtTokenHelper.validateToken(token, userDetails);
+			if (isValidatedToken) {
 
+				// set the authentication
 				UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
 						userDetails, null, userDetails.getAuthorities());
 
@@ -70,13 +78,11 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
 				SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 			} else {
-				System.out.println("Invalid jwt token");
+				logger.info("Invalid jwt token");
 			}
 		} else {
-			System.out.println("username is null or context is null");
+			logger.info("username is null or context is not null");
 		}
-
 		filterChain.doFilter(request, response);
 	}
-
 }
