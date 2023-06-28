@@ -54,6 +54,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 			} catch (ExpiredJwtException e) {
 				logger.info("Given jwt token is expired !!");
 				e.printStackTrace();
+//				throw new ExpiredJwtException(e.getHeader(), e.getClaims(), e.getMessage());
 			} catch (MalformedJwtException e) {
 				logger.info("Some changed has done in token !! Invalid Token");
 				e.printStackTrace();
