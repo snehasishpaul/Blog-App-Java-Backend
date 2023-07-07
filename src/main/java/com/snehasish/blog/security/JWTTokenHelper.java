@@ -23,7 +23,7 @@ public class JWTTokenHelper {
 	public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60; // 5 * 60 * 60
 
 	private String key = "jwtTokenKeyForBlogApplicationBySnehasish1234567890In2023fq8w/wSmkN8SvY1VfbvSBqR4+r9cNkdLCZHi7A88f3r";
-//	@Value("${jwt.token.secretKey}")
+//	@Value("${jwt.secretKey}")
 //	private String key;
 	SecretKey secret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(key));
 

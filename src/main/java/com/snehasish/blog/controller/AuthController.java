@@ -25,6 +25,8 @@ import com.snehasish.blog.payload.UserDto;
 import com.snehasish.blog.security.JWTTokenHelper;
 import com.snehasish.blog.service.UserService;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -51,17 +53,29 @@ public class AuthController {
 
 	// login API
 	@PostMapping("/login")
-	public ResponseEntity<JWTAuthenticationResponse> createToken(@RequestBody JWTAuthenticationRequest req) {
+	public ResponseEntity<JWTAuthenticationResponse> createToken(@RequestBody JWTAuthenticationRequest req,
+			HttpServletResponse response) {
 		this.authenticate(req.getUsername(), req.getPassword());
 
 		UserDetails userDetails = this.userDetailsService.loadUserByUsername(req.getUsername());
 
 		String token = this.jwtTokenHelper.generateToken(userDetails);
 
+		// Create a new cookie
+		Cookie cookie = new Cookie("jwtToken", token);
+		cookie.setPath("/");
+		cookie.setMaxAge(3600); // Set the cookie expiration time in seconds
+		cookie.setHttpOnly(true); // Make the cookie accessible only via HTTP, not JavaScript
+		cookie.setSecure(true); // Make the cookie secure (HTTPS-only)
+
+		// Add the cookie to the response
+		response.addCookie(cookie);
+
 		JWTAuthenticationResponse jwtAuthenticationResponse = new JWTAuthenticationResponse();
 		jwtAuthenticationResponse.setToken(token);
 		jwtAuthenticationResponse.setUserDto(this.modelMapper.map((User) userDetails, UserDto.class));
-		return new ResponseEntity<JWTAuthenticationResponse>(jwtAuthenticationResponse, HttpStatus.OK);
+//		return new ResponseEntity<JWTAuthenticationResponse>(jwtAuthenticationResponse, HttpStatus.OK);
+		return ResponseEntity.status(HttpStatus.OK).body(jwtAuthenticationResponse);
 	}
 
 	// register new user API

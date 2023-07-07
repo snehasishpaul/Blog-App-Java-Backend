@@ -24,5 +24,4 @@ public class JWTAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
 		response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access is Denied !!");
 	}
-
 }
