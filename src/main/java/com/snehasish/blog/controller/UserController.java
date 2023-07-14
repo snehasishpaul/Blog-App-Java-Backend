@@ -23,7 +23,7 @@ import com.snehasish.blog.service.UserService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 @Validated
 public class UserController {
 

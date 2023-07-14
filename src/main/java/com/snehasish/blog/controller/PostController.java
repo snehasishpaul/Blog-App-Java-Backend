@@ -26,7 +26,7 @@ import com.snehasish.blog.service.FileService;
 import com.snehasish.blog.service.PostService;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 public class PostController {
 
 	@Autowired

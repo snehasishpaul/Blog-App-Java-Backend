@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,7 +33,7 @@ import com.snehasish.blog.security.JWTAuthenticationFilter;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-	public static final String[] PUBLIC_URLS = { "/api/auth/**", "/v3/api-docs", "/v2/api-docs",
+	public static final String[] PUBLIC_URLS = { "/api/v1/auth/**", "/v3/api-docs", "/v2/api-docs",
 			"/swagger-resources/**", "/swagger-ui/**", "/webjars/**" };
 
 	@Autowired
@@ -91,9 +93,9 @@ public class SecurityConfig {
 		 */
 
 		/* SPRING BOOT 3.1.0 Version */
-		http.csrf(csrf -> csrf.disable()).cors(cors -> cors.disable())
-				.authorizeHttpRequests(
-						auth -> auth.requestMatchers(PUBLIC_URLS).permitAll().anyRequest().authenticated())
+		http.csrf(csrf -> csrf.disable()).cors(Customizer.withDefaults())
+				.authorizeHttpRequests(auth -> auth.requestMatchers(PUBLIC_URLS).permitAll()
+						.requestMatchers(HttpMethod.GET).permitAll().anyRequest().authenticated())
 				.exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 		// .requestMatchers(HttpMethod.GET).permitAll()

@@ -19,7 +19,7 @@ import com.snehasish.blog.payload.CommentDto;
 import com.snehasish.blog.service.CommentService;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 public class CommentController {
 
 	@Autowired
