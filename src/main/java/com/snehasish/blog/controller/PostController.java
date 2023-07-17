@@ -39,10 +39,9 @@ public class PostController {
 	private String path;
 
 	// create
-	@PostMapping("/users/{userId}/categories/{categoryId}/posts")
-	public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto, @PathVariable("userId") Long userId,
-			@PathVariable("categoryId") Long categoryId) {
-		PostDto post = this.postService.createPost(postDto, userId, categoryId);
+	@PostMapping("/users/categories/posts")
+	public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto) {
+		PostDto post = this.postService.createPost(postDto, postDto.getPostUserId(), postDto.getPostUserId());
 
 		return new ResponseEntity<PostDto>(post, HttpStatus.CREATED);
 	}

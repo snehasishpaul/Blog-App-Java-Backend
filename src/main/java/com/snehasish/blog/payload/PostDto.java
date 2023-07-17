@@ -15,6 +15,10 @@ public class PostDto {
 
 	private Long postId;
 
+	private Long postCategoryId;
+
+	private Long postUserId;
+
 	private String postTitle;
 
 	private String postContent;
