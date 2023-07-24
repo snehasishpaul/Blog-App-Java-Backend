@@ -26,6 +26,7 @@ import com.snehasish.blog.security.JWTTokenHelper;
 import com.snehasish.blog.service.UserService;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
@@ -66,7 +67,7 @@ public class AuthController {
 		cookie.setPath("/");
 		cookie.setMaxAge(3600); // Set the cookie expiration time in seconds
 		cookie.setHttpOnly(true); // Make the cookie accessible only via HTTP, not JavaScript
-		cookie.setSecure(true); // Make the cookie secure (HTTPS-only)
+//		cookie.setSecure(true); // Make the cookie secure (HTTPS-only)
 
 		// Add the cookie to the response
 		response.addCookie(cookie);
@@ -76,6 +77,27 @@ public class AuthController {
 		jwtAuthenticationResponse.setUserDto(this.modelMapper.map((User) userDetails, UserDto.class));
 //		return new ResponseEntity<JWTAuthenticationResponse>(jwtAuthenticationResponse, HttpStatus.OK);
 		return ResponseEntity.status(HttpStatus.OK).body(jwtAuthenticationResponse);
+	}
+
+	// logout API
+	@PostMapping("/logout")
+	public void logout(HttpServletRequest request, HttpServletResponse response) {
+		// Clear the JWT token cookie on the client-side
+		Cookie[] cookies = request.getCookies();
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (cookie.getName().equals("jwtToken")) {
+					cookie.setValue(""); // Set an empty value for the cookie
+					cookie.setPath("/"); // Set the same path used for setting the cookie
+					cookie.setMaxAge(0); // Set the cookie to expire immediately
+					response.addCookie(cookie);
+					break;
+				}
+			}
+		}
+
+		// Return a response indicating successful logout
+		response.setStatus(HttpServletResponse.SC_OK);
 	}
 
 	// register new user API

@@ -13,10 +13,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -36,35 +35,42 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 
 		// 1. get token
-		String requestToken = request.getHeader("Authorization");
+//		String requestToken = request.getHeader("Authorization");
 		// Bearer 23525223sdgsg.... format
-		logger.info("Token :  { " + requestToken + " }");
+//		logger.info("Token :  { " + requestToken + " }");
 
 		String username = null;
 
 		String token = null;
 
-		if (requestToken != null && requestToken.startsWith("Bearer")) {
-			token = requestToken.substring(7);
-			try {
-				username = this.jwtTokenHelper.getUsernameFromToken(token);
-			} catch (IllegalArgumentException e) {
-				logger.info("Illegal Argument while fetching the username !!");
-				e.printStackTrace();
-			} catch (ExpiredJwtException e) {
-				logger.info("Given jwt token is expired !!");
-				e.printStackTrace();
-//				throw new ExpiredJwtException(e.getHeader(), e.getClaims(), e.getMessage());
-			} catch (MalformedJwtException e) {
-				logger.info("Some changed has done in token !! Invalid Token");
-				e.printStackTrace();
-			}
-		} else {
-			logger.info("Jwt token does not begin with 'Bearer' OR JWT token null OR Invalid Header value");
+		// commented for not using jwt token through response, rather will use it
+		// through serverside cookie
+//		if (requestToken != null && requestToken.startsWith("Bearer")) {
+//			token = requestToken.substring(7);
+//			try {
+//				username = this.jwtTokenHelper.getUsernameFromToken(token);
+//			} catch (IllegalArgumentException e) {
+//				logger.info("Illegal Argument while fetching the username !!");
+//				e.printStackTrace();
+//			} catch (ExpiredJwtException e) {
+//				logger.info("Given jwt token is expired !!");
+//				e.printStackTrace();
+////				throw new ExpiredJwtException(e.getHeader(), e.getClaims(), e.getMessage());
+//			} catch (MalformedJwtException e) {
+//				logger.info("Some changed has done in token !! Invalid Token");
+//				e.printStackTrace();
+//			}
+//		} else {
+//			logger.info("Jwt token does not begin with 'Bearer' OR JWT token null OR Invalid Header value");
+//		}
+
+		// get token from httpOnly Cookie
+		token = getTokenFromCookies(request);
+		if (token != null && !token.isEmpty()) {
+			username = this.jwtTokenHelper.getUsernameFromToken(token);
 		}
 
 		// once we get the token, now we validate
-
 		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 			Boolean isValidatedToken = this.jwtTokenHelper.validateToken(token, userDetails);
@@ -85,5 +91,17 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 			logger.info("username is null or context is not null");
 		}
 		filterChain.doFilter(request, response);
+	}
+
+	private String getTokenFromCookies(HttpServletRequest request) {
+
+		if (request.getCookies() != null) {
+			for (Cookie cookie : request.getCookies()) {
+				if (cookie.getName().equals("jwtToken")) {
+					return cookie.getValue();
+				}
+			}
+		}
+		return null;
 	}
 }
