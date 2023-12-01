@@ -13,50 +13,52 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.snehasish.blog.config.AppConstant;
 import com.snehasish.blog.entity.Role;
 import com.snehasish.blog.repository.RoleRepo;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
+@EnableAsync
 public class BlogAppApisApplication implements CommandLineRunner {
 
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-	@Autowired
-	private RoleRepo roleRepo;
+    @Autowired
+    private RoleRepo roleRepo;
 
-	public static void main(String[] args) {
-		SpringApplication.run(BlogAppApisApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BlogAppApisApplication.class, args);
+    }
 
-	@Bean
-	public ModelMapper modelMapper() {
-		return new ModelMapper();
-	}
+    @Bean
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
+    }
 
-	@Override
-	public void run(String... args) throws Exception {
-		System.out.println("password : wow$");
-		System.out.println(this.passwordEncoder.encode("wow$"));
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("password : wow$");
+        System.out.println(this.passwordEncoder.encode("wow$"));
 
-		try {
-			// add the roles on project startup (if not already defined)
-			Role role1 = new Role();
-			role1.setId(AppConstant.ROLE_ADMIN);
-			role1.setName("ROLE_ADMIN");
+        try {
+            // add the roles on project startup (if not already defined)
+            Role role1 = new Role();
+            role1.setId(AppConstant.ROLE_ADMIN);
+            role1.setName("ROLE_ADMIN");
 
-			Role role2 = new Role();
-			role2.setId(AppConstant.ROLE_NORMAL);
-			role2.setName("ROLE_NORMAL");
+            Role role2 = new Role();
+            role2.setId(AppConstant.ROLE_NORMAL);
+            role2.setName("ROLE_NORMAL");
 
-			List<Role> roles = List.of(role1, role2);
+            List<Role> roles = List.of(role1, role2);
 
-			List<Role> savedRoles = this.roleRepo.saveAll(roles);
+            List<Role> savedRoles = this.roleRepo.saveAll(roles);
 
-			savedRoles.forEach(r -> System.out.println(r));
-		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
-		}
+            savedRoles.forEach(r -> System.out.println(r));
+        } catch (Exception e) {
+            // TODO: handle exception
+            e.printStackTrace();
+        }
 
-	}
+    }
 
 }

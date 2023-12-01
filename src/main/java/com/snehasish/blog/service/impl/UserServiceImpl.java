@@ -15,130 +15,156 @@ import com.snehasish.blog.exception.ResourceNotFoundException;
 import com.snehasish.blog.payload.UserDto;
 import com.snehasish.blog.repository.RoleRepo;
 import com.snehasish.blog.repository.UserRepo;
+import com.snehasish.blog.service.EmailService;
 import com.snehasish.blog.service.UserService;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-	@Autowired
-	private UserRepo userRepo;
+    @Autowired
+    private UserRepo userRepo;
 
-	@Autowired
-	private ModelMapper modelMapper;
+    @Autowired
+    private ModelMapper modelMapper;
 
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-	@Autowired
-	private RoleRepo roleRepo;
+    @Autowired
+    private RoleRepo roleRepo;
 
-	@Override
-	public UserDto createUser(UserDto userDto) {
+    @Autowired
+    private EmailService emailService;
 
-		User user = this.userDtoToUser(userDto);
-		User savedUser = this.userRepo.save(user);
-		return this.userToUserDto(savedUser);
-	}
+    @Override
+    public UserDto createUser(UserDto userDto) {
 
-	@Override
-	public UserDto updateUser(UserDto userDto, Long userId) {
+        User user = this.userDtoToUser(userDto);
+        User savedUser = this.userRepo.save(user);
+        return this.userToUserDto(savedUser);
+    }
 
-		User user = this.userRepo.findById(userId)
-				.orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
+    @Override
+    public UserDto updateUser(UserDto userDto, Long userId) {
 
-		user.setName(userDto.getName());
-		user.setEmail(userDto.getEmail());
-		user.setPassword(userDto.getPassword());
-		user.setAbout(userDto.getAbout());
+        User user = this.userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
 
-		User updatedUser = this.userRepo.save(user);
+        user.setName(userDto.getName());
+        user.setEmail(userDto.getEmail());
+        user.setPassword(userDto.getPassword());
+        user.setAbout(userDto.getAbout());
 
-		return this.userToUserDto(updatedUser);
-	}
+        User updatedUser = this.userRepo.save(user);
 
-	@Override
-	public List<UserDto> getAllUsers() {
-		List<User> users = this.userRepo.findAll();
+        return this.userToUserDto(updatedUser);
+    }
 
-		List<UserDto> userDtoList = users.stream().map(user -> this.userToUserDto(user)).collect(Collectors.toList());
+    @Override
+    public List<UserDto> getAllUsers() {
+        List<User> users = this.userRepo.findAll();
 
-		return userDtoList;
-	}
+        List<UserDto> userDtoList = users.stream().map(user -> this.userToUserDto(user)).collect(Collectors.toList());
 
-	@Override
-	public UserDto getUserById(Long userId) {
-		User user = this.userRepo.findById(userId)
-				.orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
-		return this.userToUserDto(user);
-	}
+        return userDtoList;
+    }
 
-	@Override
-	public void deleteUserById(Long userId) {
-		User user = this.userRepo.findById(userId)
-				.orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
-		this.userRepo.delete(user);
-	}
+    @Override
+    public UserDto getUserById(Long userId) {
+        User user = this.userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
+        return this.userToUserDto(user);
+    }
 
-	@Override
-	public UserDto registerNewUser(UserDto userDto) {
-		User user = this.modelMapper.map(userDto, User.class);
+    @Override
+    public void deleteUserById(Long userId) {
+        User user = this.userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
+        this.userRepo.delete(user);
+    }
 
-		// password encoded
-		String encodedPassword = this.passwordEncoder.encode(user.getPassword());
-		user.setPassword(encodedPassword);
+    @Override
+    public UserDto registerNewUser(UserDto userDto) {
+        User user = this.modelMapper.map(userDto, User.class);
 
-		// get the role to be assigned to the user
-		Role role = this.roleRepo.findById(AppConstant.ROLE_NORMAL).get();
+        // password encoded
+        String originalPass = user.getPassword();
+        String encodedPassword = this.passwordEncoder.encode(originalPass);
+        user.setPassword(encodedPassword);
 
-		user.getRoles().add(role);
-		User newUser = this.userRepo.save(user);
+        // get the role to be assigned to the user
+        Role role = this.roleRepo.findById(AppConstant.ROLE_NORMAL).get();
 
-		return this.modelMapper.map(newUser, UserDto.class);
-	}
+        user.getRoles().add(role);
+        User newUser = this.userRepo.save(user);
+        if (newUser != null) {
+            try {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            emailService.sendSimpleMailMessage("weishenpov@gmail.com", user.getEmail(), "Blog App: Registration", user.getName(), user.getUsername(), originalPass);
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+                    }
+                }.start();
+            } catch (Exception e) {
+                System.out.println("ERROR" + e.getMessage());
+            }
+        }
 
-	@Override
-	public UserDto registerNewUserById(Long userId) {
-		User user = this.userRepo.findById(userId)
-				.orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
+        return this.modelMapper.map(newUser, UserDto.class
+        );
+    }
 
-		// password encoder
-		String encodedPass = this.passwordEncoder.encode(user.getPassword());
-		user.setPassword(encodedPass);
+    @Override
+    public UserDto registerNewUserById(Long userId) {
+        User user = this.userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
 
-		// role assigning
-		Role role = this.roleRepo.findById(AppConstant.ROLE_NORMAL).get();
-		user.getRoles().add(role);
+        // password encoder
+        String encodedPass = this.passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPass);
 
-		User updatedUser = this.userRepo.save(user);
-		return this.modelMapper.map(updatedUser, UserDto.class);
-	}
+        // role assigning
+        Role role = this.roleRepo.findById(AppConstant.ROLE_NORMAL).get();
+        user.getRoles().add(role);
 
-	public User userDtoToUser(UserDto userDto) {
+        User updatedUser = this.userRepo.save(user);
 
-		// using ModelMapper class to map UserDto class to User class
-		User user = this.modelMapper.map(userDto, User.class);
+        return this.modelMapper.map(updatedUser, UserDto.class
+        );
+    }
+
+    public User
+            userDtoToUser(UserDto userDto) {
+
+        // using ModelMapper class to map UserDto class to User class
+        User user = this.modelMapper.map(userDto, User.class
+        );
 
 //		user.setId(userDto.getId());
 //		user.setName(userDto.getName());
 //		user.setEmail(userDto.getEmail());
 //		user.setPassword(userDto.getPassword());
 //		user.setAbout(userDto.getAbout());
+        return user;
+    }
 
-		return user;
-	}
+    public UserDto
+            userToUserDto(User user) {
 
-	public UserDto userToUserDto(User user) {
-
-		// using ModelMapper class to map User class to UserDto class
-		UserDto userDto = this.modelMapper.map(user, UserDto.class);
+        // using ModelMapper class to map User class to UserDto class
+        UserDto userDto = this.modelMapper.map(user, UserDto.class
+        );
 
 //		userDto.setId(user.getId());
 //		userDto.setName(user.getName());
 //		userDto.setEmail(user.getEmail());
 //		userDto.setPassword(user.getPassword());
 //		userDto.setAbout(user.getAbout());
-
-		return userDto;
-	}
+        return userDto;
+    }
 
 }
