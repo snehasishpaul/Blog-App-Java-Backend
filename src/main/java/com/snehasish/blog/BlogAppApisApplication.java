@@ -41,19 +41,19 @@ public class BlogAppApisApplication implements CommandLineRunner {
 
         try {
             // add the roles on project startup (if not already defined)
-            Role role1 = new Role();
-            role1.setId(AppConstant.ROLE_ADMIN);
-            role1.setName("ROLE_ADMIN");
-
-            Role role2 = new Role();
-            role2.setId(AppConstant.ROLE_NORMAL);
-            role2.setName("ROLE_NORMAL");
-
-            List<Role> roles = List.of(role1, role2);
-
-            List<Role> savedRoles = this.roleRepo.saveAll(roles);
-
-            savedRoles.forEach(r -> System.out.println(r));
+//            Role role1 = new Role();
+//            role1.setId(AppConstant.ROLE_ADMIN);
+//            role1.setName("ROLE_ADMIN");
+//
+//            Role role2 = new Role();
+//            role2.setId(AppConstant.ROLE_NORMAL);
+//            role2.setName("ROLE_NORMAL");
+//
+//            List<Role> roles = List.of(role1, role2);
+//
+//            List<Role> savedRoles = this.roleRepo.saveAll(roles);
+//
+//            savedRoles.forEach(r -> System.out.println(r));
         } catch (Exception e) {
             // TODO: handle exception
             e.printStackTrace();
